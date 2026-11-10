@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Meu Financeiro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0b1020; --panel:#121a30; --panel2:#18223d; --line:#222e4d; --text:#e6ebf5; --mut:#8b97b5;
+  --green:#22c55e; --red:#f43f5e; --blue:#60a5fa; --violet:#a78bfa; --amber:#fbbf24; --teal:#2dd4bf;
+  --radius:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+body{min-height:100vh;background:
+  radial-gradient(900px 500px at 85% -10%,rgba(96,165,250,.12),transparent 60%),
+  radial-gradient(700px 400px at -10% 10%,rgba(167,139,250,.10),transparent 60%),var(--bg)}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 28px 60px}
+header.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--teal),var(--blue) 55%,var(--violet));display:grid;place-items:center;font-weight:800;color:#06101f}
+h1{font-size:20px;margin:0;letter-spacing:.2px}
+.sub{color:var(--mut);font-size:12px;margin-top:2px}
+.ctrl{display:flex;gap:8px;align-items:center}
+select,.btn{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 12px;cursor:pointer;transition:.15s}
+select:hover,.btn:hover{border-color:#34457a}
+.btn.primary{background:linear-gradient(135deg,var(--blue),var(--violet));border:0;color:#06101f;font-weight:700}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent}
+.pill{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);color:var(--mut);display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--mut);display:inline-block}
+.pill.ok i{background:var(--green)} .pill.sync i{background:var(--amber)} .pill.err i{background:var(--red)}
+.section-title{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--mut);margin:26px 0 10px;font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.kpi{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;position:relative;overflow:hidden}
+.kpi:before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:var(--accent,var(--blue))}
+.kl{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--mut);font-weight:700}
+.kv{font-size:22px;font-weight:800;margin:8px 0 4px;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
+.ks{font-size:11px;color:var(--mut)}
+.kpi.g{--accent:var(--green)} .kpi.g .kv{color:var(--green)}
+.kpi.r{--accent:var(--red)} .kpi.r .kv{color:var(--red)}
+.kpi.b{--accent:var(--blue)} .kpi.b .kv{color:var(--blue)}
+.kpi.v{--accent:var(--violet)} .kpi.v .kv{color:var(--violet)}
+.kpi.t{--accent:var(--teal)}
+.kpi.pos{--accent:var(--green)} .kpi.pos .kv,.kpi.pos .ks{color:var(--green)}
+.kpi.neg{--accent:var(--red)} .kpi.neg .kv,.kpi.neg .ks{color:var(--red)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.card h3{margin:0 0 12px;font-size:14px;font-weight:700}
+.card h3 small{color:var(--mut);font-weight:500;margin-left:6px}
+.c6{grid-column:span 6}.c12{grid-column:span 12}.c7{grid-column:span 7}.c5{grid-column:span 5}
+.chart{position:relative;height:290px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--mut);font-weight:600;font-size:11px;letter-spacing:.8px;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid rgba(34,46,77,.6)}
+td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px}
+.t-Entrada{background:rgba(34,197,94,.15);color:var(--green)}
+.t-Saída{background:rgba(244,63,94,.15);color:var(--red)}
+.t-Investimento{background:rgba(96,165,250,.15);color:var(--blue)}
+.t-Reserva{background:rgba(167,139,250,.15);color:var(--violet)}
+.del{background:none;border:0;color:var(--mut);cursor:pointer;font-size:14px;padding:4px 8px;border-radius:8px}
+.del:hover{color:var(--red);background:rgba(244,63,94,.1)}
+.empty{text-align:center;padding:34px 10px;color:var(--mut)}
+.empty b{display:block;color:var(--text);font-size:16px;margin-bottom:6px}
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:20px;padding:0;width:min(480px,94vw);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+dialog::backdrop{background:rgba(5,8,18,.7);backdrop-filter:blur(3px)}
+.dlg{padding:22px 24px}
+.dlg h2{margin:0 0 16px;font-size:18px}
+label{display:block;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--mut);font-weight:700;margin:12px 0 6px}
+input[type=text],input[type=date],input[type=password],input[type=number]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 12px;outline:none}
+input:focus,select:focus{border-color:var(--blue)}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.seg button{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 4px;cursor:pointer;font-weight:700;font-size:13px}
+.seg button.on[data-t=Entrada]{background:rgba(34,197,94,.18);border-color:var(--green);color:var(--green)}
+.seg button.on[data-t="Saída"]{background:rgba(244,63,94,.18);border-color:var(--red);color:var(--red)}
+.seg button.on[data-t=Investimento]{background:rgba(96,165,250,.18);border-color:var(--blue);color:var(--blue)}
+.seg button.on[data-t=Reserva]{background:rgba(167,139,250,.18);border-color:var(--violet);color:var(--violet)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.hint{font-size:12px;color:var(--mut);line-height:1.5;margin:8px 0 0}
+.msg{font-size:12px;margin-top:10px;min-height:16px}
+.msg.err{color:var(--red)} .msg.ok{color:var(--green)}
+@media (max-width:1000px){.kpis{grid-template-columns:repeat(3,1fr)}.c6,.c7,.c5{grid-column:span 12}}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}.wrap{padding:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo">$</div>
+      <div><h1>Meu Financeiro</h1><div class="sub" id="subtitle">Painel pessoal</div></div>
+    </div>
+    <div class="ctrl">
+      <select id="selMes" aria-label="Mês"></select>
+      <select id="selAno" aria-label="Ano"></select>
+    </div>
+    <span class="pill" id="syncPill" title="Sincronização com GitHub"><i></i><span id="syncTxt">Só neste navegador</span></span>
+    <button class="btn ghost" id="btnCfg">⚙ Dados e GitHub</button>
+    <button class="btn primary" id="btnNovo">＋ Novo lançamento <span style="opacity:.6;font-weight:500">(N)</span></button>
+  </header>
+
+  <div class="section-title" id="ttAno">Ano</div>
+  <div class="kpis" id="kpisAno"></div>
+  <div class="section-title" id="ttMes">Mês</div>
+  <div class="kpis" id="kpisMes"></div>
+
+  <div class="section-title">Gráficos</div>
+  <div class="grid">
+    <div class="card c6"><h3>Entradas x Saídas <small>por mês</small></h3><div class="chart"><canvas id="chFluxo"></canvas></div></div>
+    <div class="card c6"><h3>Resultado do mês <small>verde = sobrou · vermelho = faltou</small></h3><div class="chart"><canvas id="chResultado"></canvas></div></div>
+    <div class="card c7"><h3>Dinheiro livre acumulado <small>resultado − investido − guardado</small></h3><div class="chart"><canvas id="chAcum"></canvas></div></div>
+    <div class="card c5"><h3>Gastos por categoria <small>no ano</small></h3><div class="chart"><canvas id="chCat"></canvas></div></div>
+    <div class="card c12">
+      <h3>Últimos lançamentos</h3>
+      <div id="lista"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Novo lançamento -->
+<dialog id="dlgNovo"><form class="dlg" id="formNovo" method="dialog">
+  <h2>Novo lançamento</h2>
+  <div class="seg" id="segTipo">
+    <button type="button" data-t="Entrada" class="on">Entrada</button>
+    <button type="button" data-t="Saída">Saída</button>
+    <button type="button" data-t="Investimento">Investir</button>
+    <button type="button" data-t="Reserva">Guardar</button>
+  </div>
+  <div class="row2">
+    <div><label for="fValor">Valor (R$)</label><input id="fValor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" required></div>
+    <div><label for="fData">Data</label><input id="fData" type="date" required></div>
+  </div>
+  <label for="fCat">Categoria</label>
+  <input id="fCat" type="text" list="dlCats" autocomplete="off" placeholder="Escolha ou digite">
+  <datalist id="dlCats"></datalist>
+  <label for="fDesc">Descrição (opcional)</label>
+  <input id="fDesc" type="text" autocomplete="off" placeholder="Ex.: mercado do mês">
+  <p class="hint" id="hintTipo"></p>
+  <div class="msg err" id="fMsg"></div>
+  <div class="actions">
+    <button type="button" class="btn ghost" id="fCancel">Cancelar</button>
+    <button type="button" class="btn" id="fSalvarNovo">Salvar e novo</button>
+    <button type="submit" class="btn primary">Salvar</button>
+  </div>
+</form></dialog>
+
+<!-- Dados e GitHub -->
+<dialog id="dlgCfg"><div class="dlg">
+  <h2>Dados e sincronização</h2>
+  <p class="hint" style="margin-top:0">Seus dados ficam neste navegador. Para guardar também num <b>repositório privado</b> do GitHub (e abrir em outro aparelho), preencha abaixo. O token fica salvo só aqui.</p>
+  <div class="row2">
+    <div><label for="gOwner">Usuário GitHub</label><input id="gOwner" type="text" placeholder="seu-usuario" autocomplete="off"></div>
+    <div><label for="gRepo">Repositório (privado)</label><input id="gRepo" type="text" placeholder="financeiro-dados" autocomplete="off"></div>
+  </div>
+  <div class="row2">
+    <div><label for="gPath">Arquivo</label><input id="gPath" type="text" placeholder="dados.json" autocomplete="off"></div>
+    <div><label for="gBranch">Branch</label><input id="gBranch" type="text" placeholder="main" autocomplete="off"></div>
+  </div>
+  <label for="gToken">Token de acesso (fine-grained)</label>
+  <input id="gToken" type="password" placeholder="github_pat_..." autocomplete="off">
+  <div class="msg" id="gMsg"></div>
+  <div class="actions">
+    <button class="btn ghost" id="gLimpar" type="button">Desconectar</button>
+    <button class="btn primary" id="gSalvar" type="button">Testar e salvar</button>
+  </div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:20px 0 6px">
+  <label>Backup manual</label>
+  <div class="actions" style="justify-content:flex-start;margin-top:6px">
+    <button class="btn" id="bExport" type="button">⬇ Exportar JSON</button>
+    <button class="btn" id="bImport" type="button">⬆ Importar JSON</button>
+    <input id="bFile" type="file" accept="application/json,.json" hidden>
+  </div>
+  <div class="actions"><button class="btn ghost" id="cfgFechar" type="button">Fechar</button></div>
+</div></dialog>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const KEY = "mf_data_v1", CFGKEY = "mf_cfg_v1";
+const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const MS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const CATS = {
+  "Entrada": ["Salário","Freelance","Rendimentos","Reembolso","Outros"],
+  "Saída": ["Moradia","Mercado","Alimentação","Transporte","Saúde","Educação","Lazer","Assinaturas","Cartão de crédito","Impostos","Vestuário","Viagem","Pets","Outros"],
+  "Investimento": ["Renda fixa","Ações","FIIs","Cripto","Exterior","Outros"],
+  "Reserva": ["Reserva de emergência","Viagem","Casa","Carro","Outros"]
+};
+const HINTS = {
+  "Entrada":"Dinheiro que entra: salário, freelas, rendimentos.",
+  "Saída":"Gastos do dia a dia. Digite o valor positivo.",
+  "Investimento":"Aporte em investimentos. Para resgate, use valor negativo.",
+  "Reserva":"Dinheiro guardado em reservas/metas. Para retirada, use valor negativo."
+};
+const brl = v => v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const brl0 = v => v.toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2));
+const todayISO = () => { const d = new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
+
+/* ---------- estado ---------- */
+let db = loadJSON(KEY, {version:1, lancamentos:[]});
+let cfg = loadJSON(CFGKEY, {});
+const now = new Date();
+let sel = {ano: now.getFullYear(), mes: now.getMonth()};
+let remoteSha = null, pushTimer = null, syncing = false;
+function loadJSON(k, def){ try{ const v = JSON.parse(localStorage.getItem(k)); return v || def; }catch(e){ return def; } }
+function saveLocal(){ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){ setStatus("err","Não consegui salvar no navegador"); } }
+const live = () => db.lancamentos.filter(l => !l.deleted);
+
+/* ---------- cálculos ---------- */
+function calc(y){
+  const z = () => Array(12).fill(0);
+  const o = {ent:z(), sai:z(), inv:z(), res:z(), cats:{}, last:-1};
+  const key = {"Entrada":"ent","Saída":"sai","Investimento":"inv","Reserva":"res"};
+  for(const l of live()){
+    if(+l.data.slice(0,4) !== y) continue;
+    const m = +l.data.slice(5,7) - 1, k = key[l.tipo];
+    if(!k) continue;
+    o[k][m] += l.valor;
+    if(l.tipo === "Saída"){ const c = l.categoria || "Sem categoria"; o.cats[c] = (o.cats[c]||0) + l.valor; }
+    if(m > o.last) o.last = m;
+  }
+  o.resultado = o.ent.map((v,i) => v - o.sai[i]);
+  o.livre = o.resultado.map((v,i) => v - o.inv[i] - o.res[i]);
+  let a = 0;
+  o.acum = o.livre.map((v,i) => i <= o.last ? (a += v) : null);
+  return o;
+}
+const sum = a => a.reduce((x,y) => x+y, 0);
+
+/* ---------- KPIs ---------- */
+function kpi(label, val, sub, cls){ return `<div class="kpi ${cls}"><div class="kl">${label}</div><div class="kv">${val}</div><div class="ks">${sub}</div></div>`; }
+function signCls(v){ return v < 0 ? "neg" : "pos"; }
+function renderKpis(c){
+  const m = sel.mes;
+  const E = sum(c.ent), S = sum(c.sai), R = E - S, I = sum(c.inv), G = sum(c.res);
+  const taxa = E > 0 ? (I + G) / E : null;
+  $("#ttAno").textContent = "Ano de " + sel.ano;
+  $("#ttMes").textContent = MESES[m] + " de " + sel.ano;
+  $("#kpisAno").innerHTML =
+    kpi("Entradas", brl0(E), "no ano", "g") +
+    kpi("Saídas", brl0(S), "no ano", "r") +
+    kpi("Resultado", brl0(R), R < 0 ? "▼ ano no negativo" : "▲ ano no positivo", signCls(R)) +
+    kpi("Taxa de poupança", taxa === null ? "—" : (taxa*100).toFixed(1).replace(".",",") + "%", "(investido + guardado) ÷ entradas", "t") +
+    kpi("Investido", brl0(I), "aportes no ano", "b") +
+    kpi("Guardado", brl0(G), "em reservas no ano", "v");
+  const re = c.resultado[m], li = c.livre[m];
+  $("#kpisMes").innerHTML =
+    kpi("Entradas", brl0(c.ent[m]), MESES[m], "g") +
+    kpi("Saídas", brl0(c.sai[m]), MESES[m], "r") +
+    kpi("Resultado", brl0(re), re < 0 ? "▼ gastou mais do que entrou" : "▲ sobrou dinheiro", signCls(re)) +
+    kpi("Livre em conta", brl0(li), "depois de investir e guardar", signCls(li)) +
+    kpi("Investido", brl0(c.inv[m]), MESES[m], "b") +
+    kpi("Guardado", brl0(c.res[m]), MESES[m], "v");
+}
+
+/* ---------- gráficos ---------- */
+const GREEN = "#22c55e", RED = "#f43f5e", BLUE = "#60a5fa", GRID = "rgba(139,151,181,.14)";
+let charts = {};
+function baseOpts(extra){
+  return Object.assign({
+    responsive:true, maintainAspectRatio:false,
+    interaction:{mode:"index", intersect:false},
+    plugins:{
+      legend:{labels:{color:"#8b97b5", usePointStyle:true, boxWidth:8}},
+      tooltip:{backgroundColor:"#0b1020", borderColor:"#222e4d", borderWidth:1, padding:10,
+        callbacks:{label:ctx => " " + (ctx.dataset.label ? ctx.dataset.label + ": " : "") + brl(ctx.parsed.y ?? ctx.parsed)}}
+    },
+    scales:{
+      x:{ticks:{color:"#8b97b5"}, grid:{display:false}, border:{display:false}},
+      y:{ticks:{color:"#8b97b5", callback:v => brl0(v)}, grid:{color:GRID}, border:{display:false}}
+    }
+  }, extra || {});
+}
+function initCharts(){
+  if(typeof Chart === "undefined"){ return false; }
+  Chart.defaults.font.family = 'Inter,system-ui,"Segoe UI",Arial,sans-serif';
+  charts.fluxo = new Chart($("#chFluxo"), {type:"bar", data:{labels:MS, datasets:[
+    {label:"Entradas", data:[], backgroundColor:GREEN, borderRadius:6, maxBarThickness:22},
+    {label:"Saídas", data:[], backgroundColor:RED, borderRadius:6, maxBarThickness:22}]}, options:baseOpts()});
+  charts.res = new Chart($("#chResultado"), {type:"bar", data:{labels:MS, datasets:[
+    {label:"Resultado", data:[], backgroundColor:[], borderRadius:6, maxBarThickness:34}]},
+    options:baseOpts({plugins:{legend:{display:false}, tooltip:baseOpts().plugins.tooltip}})});
+  charts.acum = new Chart($("#chAcum"), {type:"line", data:{labels:MS, datasets:[
+    {label:"Livre acumulado", data:[], borderColor:BLUE, backgroundColor:"rgba(96,165,250,.14)", fill:true, tension:.35,
+     pointRadius:4, pointBackgroundColor:[], pointBorderColor:"#0b1020", borderWidth:2.5, spanGaps:false}]},
+    options:baseOpts({plugins:{legend:{display:false}, tooltip:baseOpts().plugins.tooltip}})});
+  charts.cat = new Chart($("#chCat"), {type:"doughnut", data:{labels:[], datasets:[{data:[], backgroundColor:[], borderColor:"#121a30", borderWidth:3}]},
+    options:{responsive:true, maintainAspectRatio:false, cutout:"62%",
+      plugins:{legend:{position:"right", labels:{color:"#c3ccdf", usePointStyle:true, boxWidth:8, font:{size:12}}},
+        tooltip:{backgroundColor:"#0b1020", borderColor:"#222e4d", borderWidth:1, padding:10, callbacks:{label:ctx => " " + ctx.label + ": " + brl(ctx.parsed)}}}}});
+  return true;
+}
+const PALETTE = ["#fbbf24","#f43f5e","#60a5fa","#a78bfa","#2dd4bf","#fb923c","#34d399","#94a3b8"];
+function renderCharts(c){
+  if(!charts.fluxo) return;
+  charts.fluxo.data.datasets[0].data = c.ent;
+  charts.fluxo.data.datasets[1].data = c.sai;
+  charts.fluxo.update();
+  charts.res.data.datasets[0].data = c.resultado;
+  charts.res.data.datasets[0].backgroundColor = c.resultado.map(v => v < 0 ? RED : GREEN);
+  charts.res.update();
+  charts.acum.data.datasets[0].data = c.acum;
+  charts.acum.data.datasets[0].pointBackgroundColor = c.acum.map(v => v !== null && v < 0 ? RED : BLUE);
+  charts.acum.update();
+  const ent = Object.entries(c.cats).sort((a,b) => b[1]-a[1]);
+  let top = ent.slice(0,7), rest = sum(ent.slice(7).map(e => e[1]));
+  if(rest > 0) top.push(["Outras", rest]);
+  charts.cat.data.labels = top.map(e => e[0]);
+  charts.cat.data.datasets[0].data = top.map(e => e[1]);
+  charts.cat.data.datasets[0].backgroundColor = top.map((_,i) => PALETTE[i % PALETTE.length]);
+  charts.cat.update();
+}
+
+/* ---------- lista ---------- */
+function renderLista(){
+  const rows = live().sort((a,b) => (b.data.localeCompare(a.data)) || ((b.createdAt||0) - (a.createdAt||0))).slice(0,12);
+  if(!rows.length){
+    $("#lista").innerHTML = `<div class="empty"><b>Nada por aqui ainda</b>Clique em “Novo lançamento” (ou aperte N) para registrar sua primeira entrada ou saída.</div>`;
+    return;
+  }
+  const sign = {"Entrada":"+","Saída":"−","Investimento":"","Reserva":""};
+  const col = {"Entrada":"var(--green)","Saída":"var(--red)","Investimento":"var(--blue)","Reserva":"var(--violet)"};
+  $("#lista").innerHTML = `<table><thead><tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody>` +
+    rows.map(l => `<tr><td>${l.data.slice(8,10)}/${l.data.slice(5,7)}/${l.data.slice(0,4)}</td>
+      <td><span class="tag t-${esc(l.tipo)}">${esc(l.tipo)}</span></td><td>${esc(l.categoria)}</td><td>${esc(l.descricao)}</td>
+      <td class="num" style="color:${col[l.tipo]}">${sign[l.tipo]}${brl(Math.abs(l.valor)).replace(/^-/,"")}${l.valor<0 && (l.tipo==="Investimento"||l.tipo==="Reserva") ? " (saída)" : ""}</td>
+      <td><button class="del" data-id="${esc(l.id)}" title="Apagar">✕</button></td></tr>`).join("") + `</tbody></table>`;
+}
+$("#lista").addEventListener("click", e => {
+  const b = e.target.closest(".del"); if(!b) return;
+  if(!confirm("Apagar este lançamento?")) return;
+  const l = db.lancamentos.find(x => x.id === b.dataset.id);
+  if(l){ l.deleted = true; l.updatedAt = Date.now(); changed(); }
+});
+
+/* ---------- render geral ---------- */
+function render(){
+  fillYears();
+  const c = calc(sel.ano);
+  renderKpis(c); renderCharts(c); renderLista();
+  const n = live().length;
+  $("#subtitle").textContent = n ? n + " lançamento" + (n>1?"s":"") + " registrados" : "Comece registrando seu primeiro lançamento";
+}
+function fillYears(){
+  const ys = new Set([now.getFullYear(), sel.ano]);
+  live().forEach(l => ys.add(+l.data.slice(0,4)));
+  const arr = [...ys].sort((a,b) => b-a);
+  const cur = $("#selAno");
+  if(cur.options.length !== arr.length || [...cur.options].some((o,i) => +o.value !== arr[i])){
+    cur.innerHTML = arr.map(y => `<option value="${y}">${y}</option>`).join("");
+  }
+  cur.value = sel.ano;
+}
+$("#selMes").innerHTML = MESES.map((m,i) => `<option value="${i}">${m}</option>`).join("");
+$("#selMes").value = sel.mes;
+$("#selMes").onchange = e => { sel.mes = +e.target.value; render(); };
+$("#selAno").onchange = e => { sel.ano = +e.target.value; render(); };
+
+/* ---------- formulário ---------- */
+let tipo = "Entrada";
+function setTipo(t){
+  tipo = t;
+  document.querySelectorAll("#segTipo button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+  $("#dlCats").innerHTML = CATS[t].map(c => `<option value="${esc(c)}">`).join("");
+  $("#hintTipo").textContent = HINTS[t];
+}
+$("#segTipo").addEventListener("click", e => { const b = e.target.closest("button"); if(b) setTipo(b.dataset.t); });
+function abrirNovo(){
+  $("#fMsg").textContent = ""; $("#fValor").value = ""; $("#fDesc").value = ""; $("#fCat").value = "";
+  $("#fData").value = todayISO(); setTipo("Entrada");
+  $("#dlgNovo").showModal(); $("#fValor").focus();
+}
+function parseValor(s){
+  s = String(s).trim().replace(/\s|R\$/g,"");
+  if(s.includes(",")) s = s.replace(/\./g,"").replace(",",".");
+  const v = parseFloat(s);
+  return isFinite(v) ? v : NaN;
+}
+function salvarForm(keepOpen){
+  const v = parseValor($("#fValor").value);
+  const data = $("#fData").value;
+  if(!isFinite(v) || v === 0){ $("#fMsg").textContent = "Digite um valor válido."; return false; }
+  if((tipo === "Entrada" || tipo === "Saída") && v < 0){ $("#fMsg").textContent = "Para entradas e saídas, use valor positivo."; return false; }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(data)){ $("#fMsg").textContent = "Escolha uma data."; return false; }
+  const t = Date.now();
+  db.lancamentos.push({id:uid(), data, tipo, categoria:$("#fCat").value.trim(), descricao:$("#fDesc").value.trim(), valor:Math.round(v*100)/100, createdAt:t, updatedAt:t});
+  sel.ano = +data.slice(0,4); sel.mes = +data.slice(5,7) - 1; $("#selMes").value = sel.mes;
+  changed();
+  if(keepOpen){
+    $("#fMsg").textContent = ""; $("#fValor").value = ""; $("#fDesc").value = ""; $("#fValor").focus();
+  } else $("#dlgNovo").close();
+  return true;
+}
+$("#formNovo").addEventListener("submit", e => { e.preventDefault(); salvarForm(false); });
+$("#fSalvarNovo").onclick = () => salvarForm(true);
+$("#fCancel").onclick = () => $("#dlgNovo").close();
+$("#btnNovo").onclick = abrirNovo;
+document.addEventListener("keydown", e => {
+  if((e.key === "n" || e.key === "N") && !e.ctrlKey && !e.metaKey && !e.altKey && !document.querySelector("dialog[open]") && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){
+    e.preventDefault(); abrirNovo();
+  }
+});
+
+/* ---------- sincronização GitHub ---------- */
+const configured = () => cfg.owner && cfg.repo && cfg.token;
+function setStatus(kind, txt){
+  const p = $("#syncPill"); p.className = "pill " + (kind || "");
+  $("#syncTxt").textContent = txt || (configured() ? "GitHub conectado" : "Só neste navegador");
+  p.title = txt || "";
+}
+const b64enc = s => { const bytes = new TextEncoder().encode(s); let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b)); return btoa(bin); };
+const b64dec = s => { const bin = atob(s.replace(/\s/g,"")); const bytes = Uint8Array.from(bin, c => c.charCodeAt(0)); return new TextDecoder().decode(bytes); };
+const ghUrl = () => `https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/${(cfg.path || "dados.json").split("/").map(encodeURIComponent).join("/")}`;
+const ghHeaders = () => ({Authorization:"Bearer " + cfg.token, Accept:"application/vnd.github+json", "X-GitHub-Api-Version":"2022-11-28"});
+async function ghPull(){
+  const r = await fetch(ghUrl() + "?ref=" + encodeURIComponent(cfg.branch || "main") + "&t=" + Date.now(), {headers:ghHeaders(), cache:"no-store"});
+  if(r.status === 404) return {data:null, sha:null};
+  if(r.status === 401 || r.status === 403) throw new Error("Token sem permissão (confira o acesso ao repositório e a permissão Contents: Read and write).");
+  if(!r.ok) throw new Error("GitHub respondeu " + r.status);
+  const j = await r.json();
+  if(!j.content && j.size > 0) throw new Error("Arquivo grande demais para a API (>1 MB).");
+  return {data: j.content ? JSON.parse(b64dec(j.content)) : null, sha:j.sha};
+}
+async function ghPush(sha){
+  const body = {message:"Atualiza dados financeiros", content:b64enc(JSON.stringify(db, null, 1)), branch:cfg.branch || "main"};
+  if(sha) body.sha = sha;
+  const r = await fetch(ghUrl(), {method:"PUT", headers:Object.assign({"Content-Type":"application/json"}, ghHeaders()), body:JSON.stringify(body)});
+  if(r.status === 409 || r.status === 422){ const e = new Error("conflito"); e.conflict = true; throw e; }
+  if(r.status === 401 || r.status === 403 || r.status === 404) throw new Error("Sem permissão para gravar (repositório/token incorretos?).");
+  if(!r.ok) throw new Error("GitHub respondeu " + r.status);
+  return (await r.json()).content.sha;
+}
+function merge(a, b){
+  const map = new Map();
+  for(const l of [...(a.lancamentos||[]), ...(b.lancamentos||[])]){
+    if(!l || !l.id) continue;
+    const o = map.get(l.id);
+    if(!o || (l.updatedAt||0) > (o.updatedAt||0)) map.set(l.id, l);
+  }
+  return {version:1, lancamentos:[...map.values()].sort((x,y) => x.id.localeCompare(y.id))};
+}
+const canon = d => JSON.stringify((d.lancamentos||[]).slice().sort((x,y) => x.id.localeCompare(y.id)));
+async function sync(){
+  if(!configured() || syncing) return;
+  syncing = true; setStatus("sync", "Sincronizando…");
+  try{
+    for(let tries = 0; tries < 3; tries++){
+      const {data, sha} = await ghPull();
+      const before = data ? canon(data) : null;
+      db = merge(db, data || {lancamentos:[]});
+      saveLocal();
+      if(before !== null && before === canon(db)){ remoteSha = sha; break; }
+      try{ remoteSha = await ghPush(sha); break; }
+      catch(e){ if(!e.conflict || tries === 2) throw e; }
+    }
+    setStatus("ok", "Sincronizado " + new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}));
+  }catch(e){
+    setStatus("err", "Erro: " + e.message);
+  }finally{ syncing = false; render(); }
+}
+function changed(){
+  saveLocal(); render();
+  if(configured()){ clearTimeout(pushTimer); setStatus("sync", "Alterações pendentes…"); pushTimer = setTimeout(sync, 1500); }
+}
+$("#syncPill").onclick = () => configured() ? sync() : abrirCfg();
+window.addEventListener("beforeunload", e => { if(pushTimer && configured()){ e.preventDefault(); e.returnValue = ""; } });
+
+/* ---------- diálogo de dados ---------- */
+function abrirCfg(){
+  $("#gOwner").value = cfg.owner || ""; $("#gRepo").value = cfg.repo || ""; $("#gPath").value = cfg.path || "";
+  $("#gBranch").value = cfg.branch || ""; $("#gToken").value = cfg.token || "";
+  $("#gMsg").textContent = ""; $("#gMsg").className = "msg";
+  $("#dlgCfg").showModal();
+}
+$("#btnCfg").onclick = abrirCfg;
+$("#cfgFechar").onclick = () => $("#dlgCfg").close();
+$("#gSalvar").onclick = async () => {
+  const n = {owner:$("#gOwner").value.trim(), repo:$("#gRepo").value.trim(), path:$("#gPath").value.trim() || "dados.json", branch:$("#gBranch").value.trim() || "main", token:$("#gToken").value.trim()};
+  const m = $("#gMsg");
+  if(!n.owner || !n.repo || !n.token){ m.className = "msg err"; m.textContent = "Preencha usuário, repositório e token."; return; }
+  cfg = n; m.className = "msg"; m.textContent = "Testando…";
+  try{
+    await ghPull();
+    localStorage.setItem(CFGKEY, JSON.stringify(cfg));
+    m.className = "msg ok"; m.textContent = "Conectado! Sincronizando…";
+    await sync();
+    if($("#syncPill").classList.contains("err")){ m.className = "msg err"; m.textContent = $("#syncTxt").textContent; }
+    else { m.textContent = "Tudo certo. Seus dados agora são salvos no repositório privado."; }
+  }catch(e){ cfg = loadJSON(CFGKEY, {}); m.className = "msg err"; m.textContent = e.message; }
+};
+$("#gLimpar").onclick = () => {
+  if(!confirm("Desconectar do GitHub neste navegador? Seus dados locais continuam aqui.")) return;
+  localStorage.removeItem(CFGKEY); cfg = {}; setStatus("", ""); abrirCfg();
+};
+$("#bExport").onclick = () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(db, null, 1)], {type:"application/json"}));
+  a.download = "financeiro-backup-" + todayISO() + ".json"; a.click(); URL.revokeObjectURL(a.href);
+};
+$("#bImport").onclick = () => $("#bFile").click();
+$("#bFile").onchange = async e => {
+  const f = e.target.files[0]; if(!f) return;
+  try{
+    const d = JSON.parse(await f.text());
+    if(!Array.isArray(d.lancamentos)) throw new Error("Arquivo inválido");
+    db = merge(db, d); changed(); $("#gMsg").className = "msg ok"; $("#gMsg").textContent = "Backup importado e mesclado.";
+  }catch(err){ $("#gMsg").className = "msg err"; $("#gMsg").textContent = "Não consegui importar: " + err.message; }
+  e.target.value = "";
+};
+
+/* ---------- início ---------- */
+const chartsOk = initCharts();
+if(!chartsOk){
+  document.querySelectorAll(".chart").forEach(el => el.innerHTML = '<div class="empty">Não consegui carregar a biblioteca de gráficos. Verifique a internet e recarregue.</div>');
+}
+setStatus("", "");
+render();
+if(configured()) sync();
+</script>
+</body>
+</html>
